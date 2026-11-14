@@ -196,5 +196,6 @@ $("cloudDisconnect").addEventListener("click",()=>{cloud=null;cloudDirty=false;c
 if(cloud){$("cloudRepo").value=cloud.repo;$("cloudToken").value=cloud.token;cloudStatus("Reconnecting");pullCloud();}
 setInterval(()=>{if(cloud&&!cloudBusy&&!cloudDirty)pullCloud();},15000);
 
-save();render();
+try{localStorage.setItem(KEY,JSON.stringify(data));}catch{}
+render();
 </script></body></html>
