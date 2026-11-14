@@ -24,7 +24,7 @@ input:focus,textarea:focus,select:focus{outline:2px solid #8ad7cf;outline-offset
 .research{font-size:11px;background:#fff2db;color:#815508;padding:3px 7px;border-radius:20px;font-weight:700}
 .noteBtn{font-size:12px;padding:5px 8px;border-radius:7px;color:#3a7270}
 .noteBtn.hasNote{background:#e6f4f1;color:#116f68;border-color:#cae6e0}
-.removeBtn{border:0;color:#a5b2b4;padding:5px;background:none;font-size:19px;line-height:1}
+.editBtn{border:0;background:none;color:#35776f;padding:5px;font-size:12px}.syncbox{background:#fff;border:1px solid #dce5e4;border-radius:16px;padding:16px;margin:14px 0}.syncbox input{margin:6px 0}.removeBtn{border:0;color:#a5b2b4;padding:5px;background:none;font-size:19px;line-height:1}
 .removeBtn:hover{color:#ad3e3e;background:none}
 .noteArea{margin:10px 0 3px 31px}.noteArea textarea{min-height:68px;resize:vertical}
 .subs{margin:7px 0 0 30px;border-left:2px solid #e6efed;padding-left:12px}.subs .item{padding:7px 0;border:0}.subs .itemname{font-size:14px}
@@ -49,7 +49,7 @@ footer{font-size:12px;color:#667c80;text-align:center;margin-top:24px;line-heigh
   <input type="file" accept="application/json,.json" id="importFile" class="hidden">
  </div>
 </section>
-<div id="groups"></div>
+<details class="syncbox"><summary><strong>Private cloud sync</strong> <span class="muted" id="cloudStatus">Not connected</span></summary><p class="muted">Connect a separate private GitHub repository to automatically sync your list across devices. Do not use the public JAList repository for data.</p><label class="small">Private repository (owner/name)</label><input type="text" id="cloudRepo" placeholder="username/private-repo"><label class="small">Fine-grained GitHub token (Contents: read/write)</label><input type="password" id="cloudToken" placeholder="github_pat_…"><button id="cloudConnect" class="primary">Connect</button> <button id="cloudDisconnect">Disconnect</button><p class="muted">Credentials stay in this browser. Reconnect using the same private repository on your other devices. Your changes will sync every 15 seconds.</p></details><div id="groups"></div>
 <section class="panel"><h2>Add an item</h2>
 <form id="addForm">
  <div class="formgrid">
@@ -60,7 +60,7 @@ footer{font-size:12px;color:#667c80;text-align:center;margin-top:24px;line-heigh
  </div>
  <div class="formrow"><label><input type="checkbox" id="itemResearch"> Research before deciding to bring</label><button type="submit" class="primary">+ Add item</button></div>
 </form></section>
-<footer>Changes auto-save on this device/browser. For syncing across devices, export a backup and import it on the other device. Clearing browser data may remove saved changes. This page has no account or cloud database.</footer>
+<footer>Changes save automatically in this browser. To synchronize devices, connect a private GitHub data repository above.</footer>
 </main>
 <script>
 "use strict";
@@ -82,7 +82,7 @@ let data;try{data=JSON.parse(localStorage.getItem(KEY));if(!valid(data))throw 0;
 const $=id=>document.getElementById(id);
 let researchOnly=false,showAllNotes=false;
 const opened=new Set();
-function save(){try{localStorage.setItem(KEY,JSON.stringify(data));$("saveText").textContent="Saved in this browser";}catch{$("saveText").textContent="Storage unavailable — export backup";}}
+function save(){scheduleCloudSave();try{localStorage.setItem(KEY,JSON.stringify(data));$("saveText").textContent="Saved in this browser";}catch{$("saveText").textContent="Storage unavailable — export backup";}}
 function flat(items){return items.flatMap(i=>[i,...flat(i.children||[])]);}
 function esc(s){return String(s||"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
 function allItems(){return data.groups.flatMap(g=>flat(g.items));}
@@ -98,7 +98,7 @@ function renderItem(i,sub=false){
  '<input aria-label="Pack '+esc(i.name)+'" type="checkbox" data-action="check" data-id="'+esc(i.id)+'" '+(i.checked?'checked':'')+'>'+
  '<span class="itemname">'+esc(i.name)+'</span>'+(i.research?'<span class="research">Research</span>':'')+
  '<button class="noteBtn '+(hasNote?'hasNote':'')+'" data-action="note" data-id="'+esc(i.id)+'">'+(isOpen?'Hide notes':hasNote?'Show notes':'+ Note')+'</button>'+
- '<button class="removeBtn" title="Remove item" aria-label="Remove '+esc(i.name)+'" data-action="remove" data-id="'+esc(i.id)+'">×</button></div>'+
+ '<button class="editBtn" data-action="edit" data-id="'+esc(i.id)+'">Edit</button>'+ '<button class="removeBtn" title="Remove item" aria-label="Remove '+esc(i.name)+'" data-action="remove" data-id="'+esc(i.id)+'">×</button></div>'+
  (isOpen?'<div class="noteArea"><textarea data-action="edit-note" data-id="'+esc(i.id)+'" placeholder="Add notes…">'+esc(i.notes||"")+'</textarea></div>':'')+
  (children?'<div class="subs">'+children+'</div>':'')+'</div>';
 }
@@ -117,8 +117,8 @@ function render(){
 function updateParents(){
  const g=data.groups.find(x=>x.id===$("itemCategory").value)||data.groups[0];
  const current=$("itemParent").value;
- $("itemParent").innerHTML='<option value="">No parent — top-level item</option>'+g.items.map(i=>'<option value="'+esc(i.id)+'">'+esc(i.name)+'</option>').join("");
- if(g.items.some(x=>x.id===current))$("itemParent").value=current;
+ $("itemParent").innerHTML='<option value="">No parent — top-level item</option>'+flat(g.items).map(i=>'<option value="'+esc(i.id)+'">'+esc(i.name)+'</option>').join("");
+ if(flat(g.items).some(x=>x.id===current))$("itemParent").value=current;
 }
 $("groups").addEventListener("change",e=>{
  if(e.target.dataset.action!=="check")return;
@@ -128,7 +128,7 @@ $("groups").addEventListener("click",e=>{
  const btn=e.target.closest("button[data-action]");if(!btn)return;
  const id=btn.dataset.id,x=find(id);if(!x)return;
  if(btn.dataset.action==="note"){opened.has(id)?opened.delete(id):opened.add(id);render();}
- if(btn.dataset.action==="remove"&&confirm('Remove "'+x.i.name+'"?')){x.items.splice(x.items.indexOf(x.i),1);save();render();}
+ if(btn.dataset.action==="edit"){const name=prompt("Edit item name",x.i.name);if(name===null)return;if(!name.trim())return alert("Name required");x.i.name=name.trim();x.i.research=confirm("Mark as research item? OK = yes, Cancel = no");save();render();return;} if(btn.dataset.action==="remove"&&confirm('Remove "'+x.i.name+'"?')){x.items.splice(x.items.indexOf(x.i),1);save();render();}
 });
 $("groups").addEventListener("input",e=>{
  if(e.target.dataset.action!=="edit-note")return;
@@ -141,7 +141,7 @@ $("itemCategory").addEventListener("change",updateParents);
 $("addForm").addEventListener("submit",e=>{
  e.preventDefault();const name=$("itemName").value.trim();if(!name)return;
  const group=data.groups.find(x=>x.id===$("itemCategory").value)||data.groups[0];
- const parent=group.items.find(x=>x.id===$("itemParent").value);
+ const parent=flat(group.items).find(x=>x.id===$("itemParent").value);
  const id="custom-"+Date.now()+"-"+(++counter);
  const item={id,name,research:$("itemResearch").checked,checked:false,notes:$("itemNotes").value.trim(),children:[]};
  (parent?(parent.children||(parent.children=[])):group.items).push(item);
@@ -156,5 +156,45 @@ $("importFile").addEventListener("change",async e=>{
  const f=e.target.files[0];if(!f)return;
  try{const next=JSON.parse(await f.text());if(!valid(next))throw Error("Invalid file structure");if(!confirm("Replace this device's packing list with the imported backup?"))return;data=next;save();render();alert("Backup imported.");}catch(err){alert("Could not import backup: "+err.message);}finally{e.target.value="";}
 });
+
+const CLOUD_CONFIG="jalist-cloud-v1";
+let cloud=JSON.parse(localStorage.getItem(CLOUD_CONFIG)||"null");
+let cloudSha=null,cloudDirty=false,cloudBusy=false,cloudTimeout=null,cloudLast=null;
+function cloudStatus(t){$("cloudStatus").textContent=" · "+t;}
+function encode64(t){const b=new TextEncoder().encode(t);let s="";for(const x of b)s+=String.fromCharCode(x);return btoa(s);}
+function decode64(t){return new TextDecoder().decode(Uint8Array.from(atob(t.replace(/\\n/g,"")),c=>c.charCodeAt(0)));}
+async function api(method,path,body){
+ const r=await fetch("https://api.github.com"+path,{method,headers:{"Authorization":"Bearer "+cloud.token,"Accept":"application/vnd.github+json","X-GitHub-Api-Version":"2022-11-28","Content-Type":"application/json"},body:body?JSON.stringify(body):undefined});
+ if(!r.ok){const error=new Error("GitHub "+r.status);error.status=r.status;throw error;}return r.json();
+}
+function dataPath(){return "/repos/"+cloud.repo+"/contents/packing-list.json";}
+function scheduleCloudSave(){if(!cloud)return;cloudDirty=true;cloudStatus("Pending changes");clearTimeout(cloudTimeout);cloudTimeout=setTimeout(pushCloud,1000);}
+async function pushCloud(){if(!cloud||cloudBusy||!cloudDirty)return;cloudBusy=true;cloudStatus("Saving…");
+ try{const snapshot=JSON.stringify(data);const r=await api("PUT",dataPath(),{message:"Update packing list",content:encode64(snapshot),...(cloudSha?{sha:cloudSha}:{})});cloudSha=r.content.sha;cloudLast=snapshot;cloudDirty=JSON.stringify(data)!==snapshot;cloudStatus(cloudDirty?"Pending":"Synced");}
+ catch(e){cloudStatus("Sync error — local copy saved");console.error(e);}finally{cloudBusy=false;}
+}
+async function pullCloud(){if(!cloud||cloudBusy||cloudDirty)return;cloudBusy=true;
+ try{const r=await api("GET",dataPath()+"?t="+Date.now());const next=JSON.parse(decode64(r.content));if(!valid(next))throw Error("Invalid cloud data");cloudSha=r.sha;cloudLast=JSON.stringify(next);
+ if(JSON.stringify(data)!==cloudLast){data=next;localStorage.setItem(KEY,cloudLast);render();}
+ cloudStatus("Synced");
+ }catch(e){if(e.status===404){cloudDirty=true;cloudStatus("Creating cloud file");}else{cloudStatus("Offline / error");console.warn(e);}}
+ finally{cloudBusy=false;if(cloudDirty)pushCloud();}
+}
+$("cloudConnect").addEventListener("click",async()=>{
+ const repo=$("cloudRepo").value.trim(),token=$("cloudToken").value.trim();
+ if(!/^[\\w.-]+\\/[\\w.-]+$/.test(repo)||!token)return alert("Enter a repository and token.");
+ if(repo.toLowerCase()==="blitzedkrieg217-arch/jalist")return alert("The existing JAList repository is public. Use a separate PRIVATE repository for your data.");
+ cloud={repo,token};cloudStatus("Checking privacy…");
+ try{const r=await api("GET","/repos/"+repo);if(!r.private)throw Error("Data repository must be private.");
+ let remote=null;try{remote=await api("GET",dataPath());}catch(e){if(e.status!==404)throw e;}
+ if(remote){const next=JSON.parse(decode64(remote.content));if(!valid(next))throw Error("Invalid cloud list");if(!confirm("Use the existing cloud list? This replaces the local copy on this device.")){cloud=null;return;}data=next;cloudSha=remote.sha;cloudLast=JSON.stringify(next);localStorage.setItem(KEY,cloudLast);render();}
+ else{cloudSha=null;cloudDirty=true;}
+ localStorage.setItem(CLOUD_CONFIG,JSON.stringify(cloud));cloudStatus(remote?"Synced":"Creating…");if(cloudDirty)pushCloud();
+ }catch(e){cloud=null;cloudStatus("Not connected");alert("Could not connect: "+e.message);}
+});
+$("cloudDisconnect").addEventListener("click",()=>{cloud=null;cloudDirty=false;cloudSha=null;localStorage.removeItem(CLOUD_CONFIG);$("cloudToken").value="";cloudStatus("Not connected");});
+if(cloud){$("cloudRepo").value=cloud.repo;$("cloudToken").value=cloud.token;cloudStatus("Reconnecting");pullCloud();}
+setInterval(()=>{if(cloud&&!cloudBusy&&!cloudDirty)pullCloud();},15000);
+
 save();render();
 </script></body></html>
