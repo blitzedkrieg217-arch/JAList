@@ -182,7 +182,7 @@ async function pullCloud(){if(!cloud||cloudBusy||cloudDirty)return;cloudBusy=tru
 }
 $("cloudConnect").addEventListener("click",async()=>{
  const repo=$("cloudRepo").value.trim(),token=$("cloudToken").value.trim();
- if(!/^[\\w.-]+\\/[\\w.-]+$/.test(repo)||!token)return alert("Enter a repository and token.");
+ if(!new RegExp("^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$").test(repo)||!token)return alert("Enter a repository and token.");
  if(repo.toLowerCase()==="blitzedkrieg217-arch/jalist")return alert("The existing JAList repository is public. Use a separate PRIVATE repository for your data.");
  cloud={repo,token};cloudStatus("Checking privacy…");
  try{const r=await api("GET","/repos/"+repo);if(!r.private)throw Error("Data repository must be private.");
