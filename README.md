@@ -1,24 +1,13 @@
-# Japan Trip 2027 — Packing Checklist
+# Japan 2027 Packing List
 
-A responsive checklist for January 14–29, 2027.
+Continued from the existing JAList `index.html` on main (blob 29698f7c6a85119dab1b3fb818d3472177484b78). All 51 initial entries, quantities, research flags, and nested items are preserved.
 
-## Features
-- Check off packing items and track progress.
-- Expand notes on individual items. Items with existing notes show **Show notes**; otherwise **+ Note**.
-- Add new items, including nested items under existing categories.
-- Mark items for research and filter the list.
-- Search items and notes.
-- Automatically save progress in your browser's local storage.
-- Export and import a JSON backup to move data between devices.
+Private GPT Site: https://japan-packing-2027.nschmidgall.chatgpt.site
 
-## Publish with GitHub Pages
+The app uses dispatch-owned ChatGPT sign-in, an owner-only Site access policy, and server-side D1 records keyed by authenticated Site user ID. Browser code contains no credentials. Each API operation requires identity; writes also validate Origin. The D1 schema is applied through tracked Drizzle migrations.
 
-1. Open this repository on GitHub.
-2. Select **Settings → Pages**.
-3. Under **Build and deployment**, select **Deploy from a branch**.
-4. Select **main** and **/(root)**, then click **Save**.
-5. GitHub Pages will publish the website at:
-   https://blitzedkrieg217-arch.github.io/JAList/
+Edits automatically save after 600 ms. Open devices poll every 5 seconds and refresh on focus. Item-level operations merge unrelated concurrent edits; simultaneous edits to the same field use the last accepted write. Revision checks prevent lost database updates and request IDs make retries idempotent. Failed requests retry while the page remains open; closing with unsaved changes triggers a browser warning. Saved data survives browser-storage deletion.
 
-## Important storage note
-Progress is saved **per browser/device**, not directly to GitHub. If you check an item on your phone, it won't automatically sync to your computer. Use **Export backup** and **Import backup** to transfer progress. Avoid clearing browser storage without exporting a backup first.
+Source: `app/packing-html.ts` retains the existing application UI, `app/api/list/route.ts` implements persistence, and `db/seed.ts` preserves the original list. `index.html` is the matching UI source for reference; it requires the GPT Site backend and cannot synchronize through GitHub Pages alone. The previous GitHub-token sync has been removed from the active app.
+
+Run `node --experimental-strip-types verify.mjs` for list and operation checks. Build with `npm run build`. Publish through Sites from the exact source commit. No API key is required.

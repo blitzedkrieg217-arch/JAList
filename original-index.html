@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#162d39"><title>Japan '27 — Packing List</title>
+<style>
+:root{font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;color:#20333d;background:#f5f7f6;font-synthesis:none}
+*{box-sizing:border-box}body{margin:0}button,input,textarea,select{font:inherit}button{cursor:pointer}
+header{background:#162d39;color:white;padding:34px max(20px,calc((100vw - 940px)/2));}
+header small{font-weight:700;color:#a9d9d4;letter-spacing:.16em;text-transform:uppercase}h1{font-size:clamp(27px,5vw,42px);margin:6px 0 8px;letter-spacing:-.04em}
+header p{margin:0;color:#c2d4d8}main{max-width:940px;margin:24px auto 80px;padding:0 16px}
+.toolbar,.panel,.group{border:1px solid #dce5e4;border-radius:16px;background:#fff;box-shadow:0 3px 15px #1b3f4a09}
+.toolbar{padding:18px;margin-bottom:16px}.topline{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.progress{height:9px;border-radius:10px;background:#e8efed;overflow:hidden;margin-top:12px}.progress>div{height:100%;background:#1c827c;transition:width .2s}
+.muted{color:#657983;font-size:13px}.actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:14px}
+button,.button{border:1px solid #cfddda;background:#fff;border-radius:9px;padding:9px 13px;color:#203d43;font-weight:650;display:inline-block;text-decoration:none}
+button:hover{border-color:#1a8178;background:#f3fbf9}.primary{background:#177a73;color:white;border-color:#177a73}.primary:hover{background:#116760;color:white}
+input[type=search],input[type=text],textarea,select{border:1px solid #cbdad8;border-radius:9px;padding:10px 11px;background:white;color:#20333d;width:100%}
+input:focus,textarea:focus,select:focus{outline:2px solid #8ad7cf;outline-offset:1px}
+.searchbox{flex:1;min-width:180px}.group{margin-top:16px;overflow:hidden}
+.grouphead{display:flex;align-items:center;justify-content:space-between;padding:17px 20px;border-bottom:1px solid #edf1f0;gap:10px}
+.grouphead h2{margin:0;font-size:18px;letter-spacing:-.02em}
+.item{padding:12px 20px;border-bottom:1px solid #edf1f0}.item:last-child{border-bottom:0}.itemline{display:flex;align-items:center;gap:11px;min-height:30px}
+.item input[type=checkbox]{width:19px;height:19px;accent-color:#177a73;flex-shrink:0;cursor:pointer}
+.itemname{flex:1;font-size:15px}.done .itemname{text-decoration:line-through;color:#8d9d9e}
+.research{font-size:11px;background:#fff2db;color:#815508;padding:3px 7px;border-radius:20px;font-weight:700}
+.noteBtn{font-size:12px;padding:5px 8px;border-radius:7px;color:#3a7270}
+.noteBtn.hasNote{background:#e6f4f1;color:#116f68;border-color:#cae6e0}
+.editBtn{border:0;background:none;color:#35776f;padding:5px;font-size:12px}.syncbox{background:#fff;border:1px solid #dce5e4;border-radius:16px;padding:16px;margin:14px 0}.syncbox input{margin:6px 0}.removeBtn{border:0;color:#a5b2b4;padding:5px;background:none;font-size:19px;line-height:1}
+.removeBtn:hover{color:#ad3e3e;background:none}
+.noteArea{margin:10px 0 3px 31px}.noteArea textarea{min-height:68px;resize:vertical}
+.subs{margin:7px 0 0 30px;border-left:2px solid #e6efed;padding-left:12px}.subs .item{padding:7px 0;border:0}.subs .itemname{font-size:14px}
+.panel{padding:20px;margin-top:18px}.panel h2{margin:0 0 12px;font-size:19px}
+.formgrid{display:grid;grid-template-columns:2fr 1fr;gap:10px}.formrow{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:12px}
+label.small{font-size:13px;color:#61737a;display:block;margin-bottom:5px}
+.field{min-width:0}.field.wide{grid-column:1/-1}
+footer{font-size:12px;color:#667c80;text-align:center;margin-top:24px;line-height:1.6}
+.hidden{display:none!important}.empty{text-align:center;color:#72848a;padding:24px}
+@media(max-width:580px){.formgrid{grid-template-columns:1fr}.grouphead{padding:14px}.item{padding:12px 14px}.noteBtn{font-size:11px}.toolbar{padding:14px}}
+</style></head><body>
+<header><small>Japan · January 2027</small><h1>Packing List</h1><p>Tokyo · Hakuba · Osaka · Kyoto &nbsp; | &nbsp; Jan 14–29</p></header>
+<main>
+<section class="toolbar">
+ <div class="topline"><strong id="progressText">0 packed</strong><span class="muted" id="saveText">Saved in this browser</span></div>
+ <div class="progress" role="progressbar" aria-label="Packing progress"><div id="progressBar" style="width:0"></div></div>
+ <div class="actions">
+  <input class="searchbox" type="search" id="search" placeholder="Search items and notes…" aria-label="Search packing list">
+  <button id="researchToggle" aria-pressed="false">Research items only</button>
+  <button id="notesToggle" aria-pressed="false">Show all notes</button>
+  <button id="exportBtn">Export backup</button><button id="importBtn">Import backup</button>
+  <input type="file" accept="application/json,.json" id="importFile" class="hidden">
+ </div>
+</section>
+<details class="syncbox"><summary><strong>Private cloud sync</strong> <span class="muted" id="cloudStatus">Not connected</span></summary><p class="muted">Connect a separate private GitHub repository to automatically sync your list across devices. Do not use the public JAList repository for data.</p><label class="small">Private repository (owner/name)</label><input type="text" id="cloudRepo" placeholder="username/private-repo"><label class="small">Fine-grained GitHub token (Contents: read/write)</label><input type="password" id="cloudToken" placeholder="github_pat_…"><button id="cloudConnect" class="primary">Connect</button> <button id="cloudDisconnect">Disconnect</button><p class="muted">Credentials stay in this browser. Reconnect using the same private repository on your other devices. Your changes will sync every 15 seconds.</p></details><div id="groups"></div>
+<section class="panel"><h2>Add an item</h2>
+<form id="addForm">
+ <div class="formgrid">
+  <div class="field"><label class="small" for="itemName">Item name</label><input required maxlength="150" type="text" id="itemName" placeholder="e.g. Ski goggles"></div>
+  <div class="field"><label class="small" for="itemCategory">Section</label><select id="itemCategory"></select></div>
+  <div class="field wide"><label class="small" for="itemParent">Optional parent item (for a nested sub-item)</label><select id="itemParent"></select></div>
+  <div class="field wide"><label class="small" for="itemNotes">Notes (optional)</label><textarea id="itemNotes" rows="2" placeholder="Details, shopping links, decisions…"></textarea></div>
+ </div>
+ <div class="formrow"><label><input type="checkbox" id="itemResearch"> Research before deciding to bring</label><button type="submit" class="primary">+ Add item</button></div>
+</form></section>
+<footer>Changes save automatically in this browser. To synchronize devices, connect a private GitHub data repository above.</footer>
+</main>
+<script>
+"use strict";
+const KEY="jalist-v1";
+const initial=[
+{name:"General / Japan",items:[
+["Power adapters (Qty: 2)"],["Body cam / GoPro-style camera",1],["Suica card (get at destination)"],["Wallet for Nate",1],
+["Documents",0,["ID","Passport","All reservation documents","Driver's license"]],["Portable trash bags (get at destination)"],
+["Backpack liner",1],["Travel insurance",1],["Sunglasses"],["Hat"],["Polaroid mini photo printer",1],["Crocs (Todd)"]]},
+{name:"Toiletries",items:[
+["Birth control"],["Tampons"],["Toothbrush"],["Sunscreen"],["Razor"],["Clippers (Nate)"],["Hair ties"],["Q-tips"],["Floss"],["Deodorant"],["Tums"],["Icy Hot patches",1]]},
+{name:"Airplane / Carry-on",items:[
+["Snacks",0,["Lozenges","Gum","Melatonin","Dramamine","Lip balm","Liquid I.V."]],
+["Headphones / earplugs"],["Eye masks"],["Seat cushion",1],["Pillow",1],["Compression socks"],["Blanket",1],["Wet wipes"],["Face mask"],["Water bottle"],["Nintendo Switch",0,["Hard case (?)"]],["Toothbrush + hygiene kit"],["Tissues"],["Deodorant"],["Power bank (check airline restrictions)"],["Pen"]]}];
+let counter=0;
+function fromInitial(){return {version:1,groups:initial.map((g,gi)=>({id:"g"+gi,name:g.name,items:g.items.map((a,ii)=>({id:"i"+gi+"-"+ii,name:a[0],research:!!a[1],checked:false,notes:"",children:(a[2]||[]).map((s,si)=>({id:"s"+gi+"-"+ii+"-"+si,name:s,research:s.includes("(?)"),checked:false,notes:"",children:[]}))}))}))};}
+function valid(d){return d&&Array.isArray(d.groups)&&d.groups.every(g=>typeof g.name==="string"&&Array.isArray(g.items));}
+let data;try{data=JSON.parse(localStorage.getItem(KEY));if(!valid(data))throw 0;}catch{data=fromInitial();}
+const $=id=>document.getElementById(id);
+let researchOnly=false,showAllNotes=false;
+const opened=new Set();
+function save(){scheduleCloudSave();try{localStorage.setItem(KEY,JSON.stringify(data));$("saveText").textContent="Saved in this browser";}catch{$("saveText").textContent="Storage unavailable — export backup";}}
+function flat(items){return items.flatMap(i=>[i,...flat(i.children||[])]);}
+function esc(s){return String(s||"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
+function allItems(){return data.groups.flatMap(g=>flat(g.items));}
+function find(id){for(const g of data.groups){const rec=(items)=>{for(const i of items){if(i.id===id)return {i,items};const v=rec(i.children||[]);if(v)return v;}return null;};const v=rec(g.items);if(v)return v;}return null;}
+function matches(i,q){return !q||(i.name+" "+(i.notes||"")).toLowerCase().includes(q)|| (i.children||[]).some(c=>matches(c,q));}
+function renderItem(i,sub=false){
+ const query=$("search").value.trim().toLowerCase();
+ if(researchOnly&&!i.research&&!(i.children||[]).some(x=>x.research))return "";
+ if(!matches(i,query))return "";
+ const children=(i.children||[]).map(x=>renderItem(x,true)).join("");
+ const isOpen=showAllNotes||opened.has(i.id),hasNote=!!(i.notes||"").trim();
+ return '<div class="item '+(i.checked?'done':'')+'"><div class="itemline">'+
+ '<input aria-label="Pack '+esc(i.name)+'" type="checkbox" data-action="check" data-id="'+esc(i.id)+'" '+(i.checked?'checked':'')+'>'+
+ '<span class="itemname">'+esc(i.name)+'</span>'+(i.research?'<span class="research">Research</span>':'')+
+ '<button class="noteBtn '+(hasNote?'hasNote':'')+'" data-action="note" data-id="'+esc(i.id)+'">'+(isOpen?'Hide notes':hasNote?'Show notes':'+ Note')+'</button>'+
+ '<button class="editBtn" data-action="edit" data-id="'+esc(i.id)+'">Edit</button>'+ '<button class="removeBtn" title="Remove item" aria-label="Remove '+esc(i.name)+'" data-action="remove" data-id="'+esc(i.id)+'">×</button></div>'+
+ (isOpen?'<div class="noteArea"><textarea data-action="edit-note" data-id="'+esc(i.id)+'" placeholder="Add notes…">'+esc(i.notes||"")+'</textarea></div>':'')+
+ (children?'<div class="subs">'+children+'</div>':'')+'</div>';
+}
+function render(){
+ const items=allItems(),done=items.filter(x=>x.checked).length;
+ $("progressText").textContent=done+" of "+items.length+" items packed";
+ $("progressBar").style.width=(items.length?100*done/items.length:0)+"%";
+ $("groups").innerHTML=data.groups.map(g=>{let html=g.items.map(x=>renderItem(x)).join("");return html?'<section class="group"><div class="grouphead"><h2>'+esc(g.name)+'</h2><span class="muted">'+flat(g.items).filter(x=>x.checked).length+'/'+flat(g.items).length+'</span></div>'+html+'</section>':'';}).join("")||'<div class="empty">No matching items found.</div>';
+ $("researchToggle").setAttribute("aria-pressed",String(researchOnly));
+ $("researchToggle").classList.toggle("primary",researchOnly);
+ $("notesToggle").setAttribute("aria-pressed",String(showAllNotes));
+ $("notesToggle").classList.toggle("primary",showAllNotes);
+ $("itemCategory").innerHTML=data.groups.map(g=>'<option value="'+esc(g.id)+'">'+esc(g.name)+'</option>').join("");
+ updateParents();
+}
+function updateParents(){
+ const g=data.groups.find(x=>x.id===$("itemCategory").value)||data.groups[0];
+ const current=$("itemParent").value;
+ $("itemParent").innerHTML='<option value="">No parent — top-level item</option>'+flat(g.items).map(i=>'<option value="'+esc(i.id)+'">'+esc(i.name)+'</option>').join("");
+ if(flat(g.items).some(x=>x.id===current))$("itemParent").value=current;
+}
+$("groups").addEventListener("change",e=>{
+ if(e.target.dataset.action!=="check")return;
+ const x=find(e.target.dataset.id);if(x){x.i.checked=e.target.checked;save();render();}
+});
+$("groups").addEventListener("click",e=>{
+ const btn=e.target.closest("button[data-action]");if(!btn)return;
+ const id=btn.dataset.id,x=find(id);if(!x)return;
+ if(btn.dataset.action==="note"){opened.has(id)?opened.delete(id):opened.add(id);render();}
+ if(btn.dataset.action==="edit"){const name=prompt("Edit item name",x.i.name);if(name===null)return;if(!name.trim())return alert("Name required");x.i.name=name.trim();x.i.research=confirm("Mark as research item? OK = yes, Cancel = no");save();render();return;} if(btn.dataset.action==="remove"&&confirm('Remove "'+x.i.name+'"?')){x.items.splice(x.items.indexOf(x.i),1);save();render();}
+});
+$("groups").addEventListener("input",e=>{
+ if(e.target.dataset.action!=="edit-note")return;
+ const x=find(e.target.dataset.id);if(x){x.i.notes=e.target.value;save();const btn=e.target.closest(".item").querySelector(".noteBtn");if(btn)btn.classList.toggle("hasNote",!!x.i.notes.trim());}
+});
+$("search").addEventListener("input",render);
+$("researchToggle").addEventListener("click",()=>{researchOnly=!researchOnly;render();});
+$("notesToggle").addEventListener("click",()=>{showAllNotes=!showAllNotes;render();});
+$("itemCategory").addEventListener("change",updateParents);
+$("addForm").addEventListener("submit",e=>{
+ e.preventDefault();const name=$("itemName").value.trim();if(!name)return;
+ const group=data.groups.find(x=>x.id===$("itemCategory").value)||data.groups[0];
+ const parent=flat(group.items).find(x=>x.id===$("itemParent").value);
+ const id="custom-"+Date.now()+"-"+(++counter);
+ const item={id,name,research:$("itemResearch").checked,checked:false,notes:$("itemNotes").value.trim(),children:[]};
+ (parent?(parent.children||(parent.children=[])):group.items).push(item);
+ $("itemName").value="";$("itemNotes").value="";$("itemResearch").checked=false;save();render();
+});
+$("exportBtn").addEventListener("click",()=>{
+ const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
+ const url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="Japan-2027-packing-list-backup.json";a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
+});
+$("importBtn").addEventListener("click",()=>$("importFile").click());
+$("importFile").addEventListener("change",async e=>{
+ const f=e.target.files[0];if(!f)return;
+ try{const next=JSON.parse(await f.text());if(!valid(next))throw Error("Invalid file structure");if(!confirm("Replace this device's packing list with the imported backup?"))return;data=next;save();render();alert("Backup imported.");}catch(err){alert("Could not import backup: "+err.message);}finally{e.target.value="";}
+});
+
+const CLOUD_CONFIG="jalist-cloud-v1";
+let cloud=JSON.parse(localStorage.getItem(CLOUD_CONFIG)||"null");
+let cloudSha=null,cloudDirty=false,cloudBusy=false,cloudTimeout=null,cloudLast=null;
+function cloudStatus(t){$("cloudStatus").textContent=" · "+t;}
+function encode64(t){const b=new TextEncoder().encode(t);let s="";for(const x of b)s+=String.fromCharCode(x);return btoa(s);}
+function decode64(t){return new TextDecoder().decode(Uint8Array.from(atob(t.replace(/\\n/g,"")),c=>c.charCodeAt(0)));}
+async function api(method,path,body){
+ const r=await fetch("https://api.github.com"+path,{method,headers:{"Authorization":"Bearer "+cloud.token,"Accept":"application/vnd.github+json","X-GitHub-Api-Version":"2022-11-28","Content-Type":"application/json"},body:body?JSON.stringify(body):undefined});
+ if(!r.ok){const error=new Error("GitHub "+r.status);error.status=r.status;throw error;}return r.json();
+}
+function dataPath(){return "/repos/"+cloud.repo+"/contents/packing-list.json";}
+function scheduleCloudSave(){if(!cloud)return;cloudDirty=true;cloudStatus("Pending changes");clearTimeout(cloudTimeout);cloudTimeout=setTimeout(pushCloud,1000);}
+async function pushCloud(){if(!cloud||cloudBusy||!cloudDirty)return;cloudBusy=true;cloudStatus("Saving…");
+ try{const snapshot=JSON.stringify(data);const r=await api("PUT",dataPath(),{message:"Update packing list",content:encode64(snapshot),...(cloudSha?{sha:cloudSha}:{})});cloudSha=r.content.sha;cloudLast=snapshot;cloudDirty=JSON.stringify(data)!==snapshot;cloudStatus(cloudDirty?"Pending":"Synced");}
+ catch(e){cloudStatus("Sync error — local copy saved");console.error(e);}finally{cloudBusy=false;}
+}
+async function pullCloud(){if(!cloud||cloudBusy||cloudDirty)return;cloudBusy=true;
+ try{const r=await api("GET",dataPath()+"?t="+Date.now());const next=JSON.parse(decode64(r.content));if(!valid(next))throw Error("Invalid cloud data");cloudSha=r.sha;cloudLast=JSON.stringify(next);
+ if(JSON.stringify(data)!==cloudLast){data=next;localStorage.setItem(KEY,cloudLast);render();}
+ cloudStatus("Synced");
+ }catch(e){if(e.status===404){cloudDirty=true;cloudStatus("Creating cloud file");}else{cloudStatus("Offline / error");console.warn(e);}}
+ finally{cloudBusy=false;if(cloudDirty)pushCloud();}
+}
+$("cloudConnect").addEventListener("click",async()=>{
+ const repo=$("cloudRepo").value.trim(),token=$("cloudToken").value.trim();
+ if(!new RegExp("^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$").test(repo)||!token)return alert("Enter a repository and token.");
+ if(repo.toLowerCase()==="blitzedkrieg217-arch/jalist")return alert("The existing JAList repository is public. Use a separate PRIVATE repository for your data.");
+ cloud={repo,token};cloudStatus("Checking privacy…");
+ try{const r=await api("GET","/repos/"+repo);if(!r.private)throw Error("Data repository must be private.");
+ let remote=null;try{remote=await api("GET",dataPath());}catch(e){if(e.status!==404)throw e;}
+ if(remote){const next=JSON.parse(decode64(remote.content));if(!valid(next))throw Error("Invalid cloud list");if(!confirm("Use the existing cloud list? This replaces the local copy on this device.")){cloud=null;return;}data=next;cloudSha=remote.sha;cloudLast=JSON.stringify(next);localStorage.setItem(KEY,cloudLast);render();}
+ else{cloudSha=null;cloudDirty=true;}
+ localStorage.setItem(CLOUD_CONFIG,JSON.stringify(cloud));cloudStatus(remote?"Synced":"Creating…");if(cloudDirty)pushCloud();
+ }catch(e){cloud=null;cloudStatus("Not connected");alert("Could not connect: "+e.message);}
+});
+$("cloudDisconnect").addEventListener("click",()=>{cloud=null;cloudDirty=false;cloudSha=null;localStorage.removeItem(CLOUD_CONFIG);$("cloudToken").value="";cloudStatus("Not connected");});
+if(cloud){$("cloudRepo").value=cloud.repo;$("cloudToken").value=cloud.token;cloudStatus("Reconnecting");pullCloud();}
+setInterval(()=>{if(cloud&&!cloudBusy&&!cloudDirty)pullCloud();},15000);
+
+try{localStorage.setItem(KEY,JSON.stringify(data));}catch{}
+render();
+</script></body></html>

@@ -6,7 +6,7 @@
 *{box-sizing:border-box}body{margin:0}button,input,textarea,select{font:inherit}button{cursor:pointer}
 header{background:#162d39;color:white;padding:34px max(20px,calc((100vw - 940px)/2));}
 header small{font-weight:700;color:#a9d9d4;letter-spacing:.16em;text-transform:uppercase}h1{font-size:clamp(27px,5vw,42px);margin:6px 0 8px;letter-spacing:-.04em}
-header p{margin:0;color:#c2d4d8}main{max-width:940px;margin:24px auto 80px;padding:0 16px}
+header p{margin:0;color:#c2d4d8}main.inactive{pointer-events:none;opacity:.6}main{max-width:940px;margin:24px auto 80px;padding:0 16px}
 .toolbar,.panel,.group{border:1px solid #dce5e4;border-radius:16px;background:#fff;box-shadow:0 3px 15px #1b3f4a09}
 .toolbar{padding:18px;margin-bottom:16px}.topline{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
 .progress{height:9px;border-radius:10px;background:#e8efed;overflow:hidden;margin-top:12px}.progress>div{height:100%;background:#1c827c;transition:width .2s}
@@ -18,9 +18,9 @@ input:focus,textarea:focus,select:focus{outline:2px solid #8ad7cf;outline-offset
 .searchbox{flex:1;min-width:180px}.group{margin-top:16px;overflow:hidden}
 .grouphead{display:flex;align-items:center;justify-content:space-between;padding:17px 20px;border-bottom:1px solid #edf1f0;gap:10px}
 .grouphead h2{margin:0;font-size:18px;letter-spacing:-.02em}
-.item{padding:12px 20px;border-bottom:1px solid #edf1f0}.item:last-child{border-bottom:0}.itemline{display:flex;align-items:center;gap:11px;min-height:30px}
+.item{padding:12px 20px;border-bottom:1px solid #edf1f0}.item:last-child{border-bottom:0}.itemline{flex-wrap:wrap;display:flex;align-items:center;gap:11px;min-height:30px}
 .item input[type=checkbox]{width:19px;height:19px;accent-color:#177a73;flex-shrink:0;cursor:pointer}
-.itemname{flex:1;font-size:15px}.done .itemname{text-decoration:line-through;color:#8d9d9e}
+.itemname{min-width:90px;flex:1;font-size:15px}.done .itemname{text-decoration:line-through;color:#8d9d9e}
 .research{font-size:11px;background:#fff2db;color:#815508;padding:3px 7px;border-radius:20px;font-weight:700}
 .noteBtn{font-size:12px;padding:5px 8px;border-radius:7px;color:#3a7270}
 .noteBtn.hasNote{background:#e6f4f1;color:#116f68;border-color:#cae6e0}
@@ -37,19 +37,18 @@ footer{font-size:12px;color:#667c80;text-align:center;margin-top:24px;line-heigh
 @media(max-width:580px){.formgrid{grid-template-columns:1fr}.grouphead{padding:14px}.item{padding:12px 14px}.noteBtn{font-size:11px}.toolbar{padding:14px}}
 </style></head><body>
 <header><small>Japan · January 2027</small><h1>Packing List</h1><p>Tokyo · Hakuba · Osaka · Kyoto &nbsp; | &nbsp; Jan 14–29</p></header>
-<main>
+<main class="inactive">
 <section class="toolbar">
- <div class="topline"><strong id="progressText">0 packed</strong><span class="muted" id="saveText">Saved in this browser</span></div>
+ <div class="topline"><strong id="progressText">0 packed</strong><span class="muted" role="status" aria-live="polite" id="saveText">Loading cloud list…</span></div>
  <div class="progress" role="progressbar" aria-label="Packing progress"><div id="progressBar" style="width:0"></div></div>
  <div class="actions">
   <input class="searchbox" type="search" id="search" placeholder="Search items and notes…" aria-label="Search packing list">
   <button id="researchToggle" aria-pressed="false">Research items only</button>
   <button id="notesToggle" aria-pressed="false">Show all notes</button>
-  <button id="exportBtn">Export backup</button><button id="importBtn">Import backup</button>
-  <input type="file" accept="application/json,.json" id="importFile" class="hidden">
+
  </div>
 </section>
-<details class="syncbox"><summary><strong>Private cloud sync</strong> <span class="muted" id="cloudStatus">Not connected</span></summary><p class="muted">Connect a separate private GitHub repository to automatically sync your list across devices. Do not use the public JAList repository for data.</p><label class="small">Private repository (owner/name)</label><input type="text" id="cloudRepo" placeholder="username/private-repo"><label class="small">Fine-grained GitHub token (Contents: read/write)</label><input type="password" id="cloudToken" placeholder="github_pat_…"><button id="cloudConnect" class="primary">Connect</button> <button id="cloudDisconnect">Disconnect</button><p class="muted">Credentials stay in this browser. Reconnect using the same private repository on your other devices. Your changes will sync every 15 seconds.</p></details><div id="groups"></div>
+<div id="groups"></div>
 <section class="panel"><h2>Add an item</h2>
 <form id="addForm">
  <div class="formgrid">
@@ -60,7 +59,7 @@ footer{font-size:12px;color:#667c80;text-align:center;margin-top:24px;line-heigh
  </div>
  <div class="formrow"><label><input type="checkbox" id="itemResearch"> Research before deciding to bring</label><button type="submit" class="primary">+ Add item</button></div>
 </form></section>
-<footer>Changes save automatically in this browser. To synchronize devices, connect a private GitHub data repository above.</footer>
+<footer>Private list · Automatically saved to your account · <a href="/signout-with-chatgpt?return_to=%2F" target="_top">Sign out</a></footer>
 </main>
 <script>
 "use strict";
@@ -78,11 +77,11 @@ const initial=[
 let counter=0;
 function fromInitial(){return {version:1,groups:initial.map((g,gi)=>({id:"g"+gi,name:g.name,items:g.items.map((a,ii)=>({id:"i"+gi+"-"+ii,name:a[0],research:!!a[1],checked:false,notes:"",children:(a[2]||[]).map((s,si)=>({id:"s"+gi+"-"+ii+"-"+si,name:s,research:s.includes("(?)"),checked:false,notes:"",children:[]}))}))}))};}
 function valid(d){return d&&Array.isArray(d.groups)&&d.groups.every(g=>typeof g.name==="string"&&Array.isArray(g.items));}
-let data;try{data=JSON.parse(localStorage.getItem(KEY));if(!valid(data))throw 0;}catch{data=fromInitial();}
+let data=fromInitial(); let ready=false;
 const $=id=>document.getElementById(id);
 let researchOnly=false,showAllNotes=false;
 const opened=new Set();
-function save(){scheduleCloudSave();try{localStorage.setItem(KEY,JSON.stringify(data));$("saveText").textContent="Saved in this browser";}catch{$("saveText").textContent="Storage unavailable — export backup";}}
+function save(){queueSave();}
 function flat(items){return items.flatMap(i=>[i,...flat(i.children||[])]);}
 function esc(s){return String(s||"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
 function allItems(){return data.groups.flatMap(g=>flat(g.items));}
@@ -90,7 +89,7 @@ function find(id){for(const g of data.groups){const rec=(items)=>{for(const i of
 function matches(i,q){return !q||(i.name+" "+(i.notes||"")).toLowerCase().includes(q)|| (i.children||[]).some(c=>matches(c,q));}
 function renderItem(i,sub=false){
  const query=$("search").value.trim().toLowerCase();
- if(researchOnly&&!i.research&&!(i.children||[]).some(x=>x.research))return "";
+ if(researchOnly&&!i.research&&!flat(i.children||[]).some(x=>x.research))return "";
  if(!matches(i,query))return "";
  const children=(i.children||[]).map(x=>renderItem(x,true)).join("");
  const isOpen=showAllNotes||opened.has(i.id),hasNote=!!(i.notes||"").trim();
@@ -103,8 +102,10 @@ function renderItem(i,sub=false){
  (children?'<div class="subs">'+children+'</div>':'')+'</div>';
 }
 function render(){
+ const category=$("itemCategory").value;
  const items=allItems(),done=items.filter(x=>x.checked).length;
  $("progressText").textContent=done+" of "+items.length+" items packed";
+ document.querySelector("[role=progressbar]").setAttribute("aria-valuenow",String(items.length?Math.round(100*done/items.length):0));
  $("progressBar").style.width=(items.length?100*done/items.length:0)+"%";
  $("groups").innerHTML=data.groups.map(g=>{let html=g.items.map(x=>renderItem(x)).join("");return html?'<section class="group"><div class="grouphead"><h2>'+esc(g.name)+'</h2><span class="muted">'+flat(g.items).filter(x=>x.checked).length+'/'+flat(g.items).length+'</span></div>'+html+'</section>':'';}).join("")||'<div class="empty">No matching items found.</div>';
  $("researchToggle").setAttribute("aria-pressed",String(researchOnly));
@@ -112,6 +113,7 @@ function render(){
  $("notesToggle").setAttribute("aria-pressed",String(showAllNotes));
  $("notesToggle").classList.toggle("primary",showAllNotes);
  $("itemCategory").innerHTML=data.groups.map(g=>'<option value="'+esc(g.id)+'">'+esc(g.name)+'</option>').join("");
+ if(data.groups.some(g=>g.id===category))$("itemCategory").value=category;
  updateParents();
 }
 function updateParents(){
@@ -142,60 +144,49 @@ $("addForm").addEventListener("submit",e=>{
  e.preventDefault();const name=$("itemName").value.trim();if(!name)return;
  const group=data.groups.find(x=>x.id===$("itemCategory").value)||data.groups[0];
  const parent=flat(group.items).find(x=>x.id===$("itemParent").value);
- const id="custom-"+Date.now()+"-"+(++counter);
+ const id="custom-"+crypto.randomUUID();
  const item={id,name,research:$("itemResearch").checked,checked:false,notes:$("itemNotes").value.trim(),children:[]};
  (parent?(parent.children||(parent.children=[])):group.items).push(item);
  $("itemName").value="";$("itemNotes").value="";$("itemResearch").checked=false;save();render();
 });
-$("exportBtn").addEventListener("click",()=>{
- const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
- const url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="Japan-2027-packing-list-backup.json";a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
-});
-$("importBtn").addEventListener("click",()=>$("importFile").click());
-$("importFile").addEventListener("change",async e=>{
- const f=e.target.files[0];if(!f)return;
- try{const next=JSON.parse(await f.text());if(!valid(next))throw Error("Invalid file structure");if(!confirm("Replace this device's packing list with the imported backup?"))return;data=next;save();render();alert("Backup imported.");}catch(err){alert("Could not import backup: "+err.message);}finally{e.target.value="";}
-});
 
-const CLOUD_CONFIG="jalist-cloud-v1";
-let cloud=JSON.parse(localStorage.getItem(CLOUD_CONFIG)||"null");
-let cloudSha=null,cloudDirty=false,cloudBusy=false,cloudTimeout=null,cloudLast=null;
-function cloudStatus(t){$("cloudStatus").textContent=" · "+t;}
-function encode64(t){const b=new TextEncoder().encode(t);let s="";for(const x of b)s+=String.fromCharCode(x);return btoa(s);}
-function decode64(t){return new TextDecoder().decode(Uint8Array.from(atob(t.replace(/\\n/g,"")),c=>c.charCodeAt(0)));}
-async function api(method,path,body){
- const r=await fetch("https://api.github.com"+path,{method,headers:{"Authorization":"Bearer "+cloud.token,"Accept":"application/vnd.github+json","X-GitHub-Api-Version":"2022-11-28","Content-Type":"application/json"},body:body?JSON.stringify(body):undefined});
- if(!r.ok){const error=new Error("GitHub "+r.status);error.status=r.status;throw error;}return r.json();
+let baseline=null, busy=false, dirty=false, retryPacket=null, retrySent=null, timer;
+const clone=x=>JSON.parse(JSON.stringify(x));
+function index(d){const m=new Map();for(const g of d.groups){function visit(items,parent){for(const i of items){m.set(i.id,{i,group:g.id,parent});visit(i.children||[],i.id);}}visit(g.items,null);}return m;}
+function diff(before,after){
+ const a=index(before),b=index(after),ops=[];
+ for(const [id,v] of a)if(!b.has(id))ops.push({type:'remove',id});
+ for(const [id,v] of b){const old=a.get(id);if(!old){if(!v.parent||a.has(v.parent))ops.push({type:'add',group:v.group,parent:v.parent,item:v.i});continue;}
+ const fields={};for(const k of ['name','notes','checked','research'])if(old.i[k]!==v.i[k])fields[k]=v.i[k];
+ if(Object.keys(fields).length)ops.push({type:'update',id,fields});}
+ return ops;
 }
-function dataPath(){return "/repos/"+cloud.repo+"/contents/packing-list.json";}
-function scheduleCloudSave(){if(!cloud)return;cloudDirty=true;cloudStatus("Pending changes");clearTimeout(cloudTimeout);cloudTimeout=setTimeout(pushCloud,1000);}
-async function pushCloud(){if(!cloud||cloudBusy||!cloudDirty)return;cloudBusy=true;cloudStatus("Saving…");
- try{const snapshot=JSON.stringify(data);const r=await api("PUT",dataPath(),{message:"Update packing list",content:encode64(snapshot),...(cloudSha?{sha:cloudSha}:{})});cloudSha=r.content.sha;cloudLast=snapshot;cloudDirty=JSON.stringify(data)!==snapshot;cloudStatus(cloudDirty?"Pending":"Synced");}
- catch(e){cloudStatus("Sync error — local copy saved");console.error(e);}finally{cloudBusy=false;}
+function status(text){$('saveText').textContent=text;}
+function queueSave(){if(!ready)return;dirty=true;status('Saving…');clearTimeout(timer);timer=setTimeout(sync,600);}
+async function request(method,body){const r=await fetch('/api/list',{method,cache:'no-store',headers:{'Content-Type':'application/json'},body:body?JSON.stringify(body):undefined});if(!r.ok)throw Error(r.status===401?'Sign in required':'Cloud unavailable');return r.json();}
+async function sync(){
+ if(busy)return;busy=true;
+ try{
+ if(!ready){const remote=await request('GET');data=remote.data;baseline=clone(data);ready=true;document.querySelector('main').classList.remove('inactive');render();status('All changes saved');return;}
+ if(retryPacket||dirty){
+ const packet=retryPacket||{id:crypto.randomUUID(),ops:diff(baseline,data)};
+ const sent=retrySent||clone(data);retrySent=sent;retryPacket=packet;status('Saving…');
+ const remote=await request('POST',packet);
+ retryPacket=null;retrySent=null;
+ // Preserve edits made while the request was in flight, then rebase them onto cloud state.
+ const later=diff(sent,data);baseline=clone(remote.data);data=applyLocal(clone(remote.data),later);dirty=later.length>0;
+ if(!document.querySelector('textarea:focus'))render();
+ status(dirty?'Saving…':'All changes saved');
+ }else if(!document.querySelector('textarea:focus')&&!document.hidden){
+ const remote=await request('GET');const pending=diff(baseline,data);baseline=clone(remote.data);data=applyLocal(clone(remote.data),pending);dirty=pending.length>0;if(!document.querySelector('textarea:focus'))render();status(dirty?'Saving…':'All changes saved');
+ }
+ }catch(e){status(navigator.onLine?'Sync interrupted · retrying automatically':'Offline · changes waiting to sync');}
+ finally{busy=false;if(dirty||retryPacket)timer=setTimeout(sync,2500);}
 }
-async function pullCloud(){if(!cloud||cloudBusy||cloudDirty)return;cloudBusy=true;
- try{const r=await api("GET",dataPath()+"?t="+Date.now());const next=JSON.parse(decode64(r.content));if(!valid(next))throw Error("Invalid cloud data");cloudSha=r.sha;cloudLast=JSON.stringify(next);
- if(JSON.stringify(data)!==cloudLast){data=next;localStorage.setItem(KEY,cloudLast);render();}
- cloudStatus("Synced");
- }catch(e){if(e.status===404){cloudDirty=true;cloudStatus("Creating cloud file");}else{cloudStatus("Offline / error");console.warn(e);}}
- finally{cloudBusy=false;if(cloudDirty)pushCloud();}
-}
-$("cloudConnect").addEventListener("click",async()=>{
- const repo=$("cloudRepo").value.trim(),token=$("cloudToken").value.trim();
- if(!new RegExp("^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$").test(repo)||!token)return alert("Enter a repository and token.");
- if(repo.toLowerCase()==="blitzedkrieg217-arch/jalist")return alert("The existing JAList repository is public. Use a separate PRIVATE repository for your data.");
- cloud={repo,token};cloudStatus("Checking privacy…");
- try{const r=await api("GET","/repos/"+repo);if(!r.private)throw Error("Data repository must be private.");
- let remote=null;try{remote=await api("GET",dataPath());}catch(e){if(e.status!==404)throw e;}
- if(remote){const next=JSON.parse(decode64(remote.content));if(!valid(next))throw Error("Invalid cloud list");if(!confirm("Use the existing cloud list? This replaces the local copy on this device.")){cloud=null;return;}data=next;cloudSha=remote.sha;cloudLast=JSON.stringify(next);localStorage.setItem(KEY,cloudLast);render();}
- else{cloudSha=null;cloudDirty=true;}
- localStorage.setItem(CLOUD_CONFIG,JSON.stringify(cloud));cloudStatus(remote?"Synced":"Creating…");if(cloudDirty)pushCloud();
- }catch(e){cloud=null;cloudStatus("Not connected");alert("Could not connect: "+e.message);}
-});
-$("cloudDisconnect").addEventListener("click",()=>{cloud=null;cloudDirty=false;cloudSha=null;localStorage.removeItem(CLOUD_CONFIG);$("cloudToken").value="";cloudStatus("Not connected");});
-if(cloud){$("cloudRepo").value=cloud.repo;$("cloudToken").value=cloud.token;cloudStatus("Reconnecting");pullCloud();}
-setInterval(()=>{if(cloud&&!cloudBusy&&!cloudDirty)pullCloud();},15000);
+function applyLocal(d,ops){for(const op of ops){const m=index(d),v=m.get(op.id);if(op.type==='update'&&v)Object.assign(v.i,op.fields);if(op.type==='remove'&&v){const g=d.groups.find(x=>x.id===v.group),items=v.parent?m.get(v.parent).i.children:g.items;items.splice(items.findIndex(x=>x.id===op.id),1);}if(op.type==='add'&&!m.has(op.item.id)){const g=d.groups.find(x=>x.id===op.group),parent=op.parent?m.get(op.parent):null;if(g&&(!op.parent||parent))(parent?parent.i.children:g.items).push(clone(op.item));}}return d;}
+window.addEventListener('online',sync);window.addEventListener('focus',sync);
+window.addEventListener('beforeunload',e=>{if(dirty||retryPacket){e.preventDefault();e.returnValue='';}});
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)sync();});
+setInterval(sync,5000);sync();
 
-try{localStorage.setItem(KEY,JSON.stringify(data));}catch{}
-render();
 </script></body></html>
