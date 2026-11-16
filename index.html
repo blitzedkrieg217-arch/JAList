@@ -17,7 +17,7 @@ input[type=search],input[type=text],textarea,select{border:1px solid #cbdad8;bor
 input:focus,textarea:focus,select:focus{outline:2px solid #8ad7cf;outline-offset:1px}
 .searchbox{flex:1;min-width:180px}.group{margin-top:16px;overflow:hidden}
 .grouphead{display:flex;align-items:center;justify-content:space-between;padding:17px 20px;border-bottom:1px solid #edf1f0;gap:10px}
-.grouphead h2{margin:0;font-size:18px;letter-spacing:-.02em}
+.grouphead{cursor:pointer;list-style:none}.grouphead::-webkit-details-marker{display:none}.grouphead::before{content:"\25B6";font-size:11px;color:#35776f;transition:transform .15s}.group[open]>.grouphead::before{transform:rotate(90deg)}.grouphead h2{flex:1;margin:0;font-size:18px;letter-spacing:-.02em}
 .item{padding:12px 20px;border-bottom:1px solid #edf1f0}.item:last-child{border-bottom:0}.itemline{flex-wrap:wrap;display:flex;align-items:center;gap:11px;min-height:30px}
 .item input[type=checkbox]{width:19px;height:19px;accent-color:#177a73;flex-shrink:0;cursor:pointer}
 .itemname{min-width:90px;flex:1;font-size:15px}.done .itemname{text-decoration:line-through;color:#8d9d9e}
@@ -81,6 +81,9 @@ let data=fromInitial(); let ready=false;
 const $=id=>document.getElementById(id);
 let researchOnly=false,showAllNotes=false;
 const opened=new Set();
+const collapsedGroups=new Set();
+try{JSON.parse(localStorage.getItem("jalist-collapsed-groups")||"[]").forEach(id=>collapsedGroups.add(id));}catch{}
+$("groups").addEventListener("toggle",e=>{const g=e.target;if(!g.matches("details.group"))return;g.open?collapsedGroups.delete(g.dataset.group):collapsedGroups.add(g.dataset.group);try{localStorage.setItem("jalist-collapsed-groups",JSON.stringify([...collapsedGroups]));}catch{}},true);
 function save(){queueSave();}
 function flat(items){return items.flatMap(i=>[i,...flat(i.children||[])]);}
 function esc(s){return String(s||"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
@@ -107,7 +110,7 @@ function render(){
  $("progressText").textContent=done+" of "+items.length+" items packed";
  document.querySelector("[role=progressbar]").setAttribute("aria-valuenow",String(items.length?Math.round(100*done/items.length):0));
  $("progressBar").style.width=(items.length?100*done/items.length:0)+"%";
- $("groups").innerHTML=data.groups.map(g=>{let html=g.items.map(x=>renderItem(x)).join("");return html?'<section class="group"><div class="grouphead"><h2>'+esc(g.name)+'</h2><span class="muted">'+flat(g.items).filter(x=>x.checked).length+'/'+flat(g.items).length+'</span></div>'+html+'</section>':'';}).join("")||'<div class="empty">No matching items found.</div>';
+ $("groups").innerHTML=data.groups.map(g=>{let html=g.items.map(x=>renderItem(x)).join("");return html?'<details class="group" data-group="'+esc(g.id)+'" '+(collapsedGroups.has(g.id)?'':'open')+'><summary class="grouphead"><h2>'+esc(g.name)+'</h2><span class="muted">'+flat(g.items).filter(x=>x.checked).length+'/'+flat(g.items).length+'</span></summary>'+html+'</details>':'';}).join("")||'<div class="empty">No matching items found.</div>';
  $("researchToggle").setAttribute("aria-pressed",String(researchOnly));
  $("researchToggle").classList.toggle("primary",researchOnly);
  $("notesToggle").setAttribute("aria-pressed",String(showAllNotes));

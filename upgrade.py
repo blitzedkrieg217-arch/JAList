@@ -67,6 +67,12 @@ document.addEventListener('visibilitychange',()=>{if(!document.hidden)sync();});
 setInterval(sync,5000);sync();
 '''
 s=s.replace('__SYNC__',sync)
+# Native disclosures preserve keyboard access and category counts while collapsed.
+s=s.replace('.grouphead h2{', '.grouphead{cursor:pointer;list-style:none}.grouphead::-webkit-details-marker{display:none}.grouphead::before{content:"\\25B6";font-size:11px;color:#35776f;transition:transform .15s}.group[open]>.grouphead::before{transform:rotate(90deg)}.grouphead h2{flex:1;')
+s=s.replace('const opened=new Set();', 'const opened=new Set();\nconst collapsedGroups=new Set();\ntry{JSON.parse(localStorage.getItem("jalist-collapsed-groups")||"[]").forEach(id=>collapsedGroups.add(id));}catch{}\n$("groups").addEventListener("toggle",e=>{const g=e.target;if(!g.matches("details.group"))return;g.open?collapsedGroups.delete(g.dataset.group):collapsedGroups.add(g.dataset.group);try{localStorage.setItem("jalist-collapsed-groups",JSON.stringify([...collapsedGroups]));}catch{}},true);')
+s=s.replace("'<section class=\"group\"><div class=\"grouphead\"><h2>'", "'<details class=\"group\" data-group=\"'+esc(g.id)+'\" '+(collapsedGroups.has(g.id)?'':'open')+'><summary class=\"grouphead\"><h2>'")
+s=s.replace("+'</span></div>'+html+'</section>'", "+'</span></summary>'+html+'</details>'")
+
 (p/'app/packing-html.ts').write_text('export const packingHTML = '+json.dumps(s)+';\n')
 (p/'app/page.tsx').unlink(missing_ok=True)
 (p/'app/route.ts').write_text('''import { packingHTML } from './packing-html';
